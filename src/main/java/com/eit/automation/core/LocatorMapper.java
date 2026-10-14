@@ -11,13 +11,21 @@ public class LocatorMapper {
     private static final Properties props = new Properties();
 
     static {
-        // 🚀 Dynamic Centralized Excel Locator Loading from Root Directory
         String rootPath = System.getProperty("user.dir");
-        File locatorWorkbook = new File(rootPath + File.separator + "Global_Locators.xlsx");
+        File rootDir = new File(rootPath);
+        File locatorWorkbook = null;
 
-        System.out.println("📂 Looking for Centralized Locator Workbook: " + locatorWorkbook.getAbsolutePath());
+        // 🔍 Dynamically find any file ending with "_Global_Locators.xlsx" or fallback to "Global_Locators.xlsx"
+        File[] matchingFiles = rootDir.listFiles((dir, name) ->
+                name.equalsIgnoreCase("Global_Locators.xlsx") || name.toLowerCase().endsWith("_global_locators.xlsx")
+        );
 
-        if (locatorWorkbook.exists() && locatorWorkbook.isFile()) {
+        if (matchingFiles != null && matchingFiles.length > 0) {
+            locatorWorkbook = matchingFiles[0]; // Pick the first matching project locator file found
+            System.out.println("📂 Found Project Locator File: " + locatorWorkbook.getName());
+        }
+
+        if (locatorWorkbook != null && locatorWorkbook.exists() && locatorWorkbook.isFile()) {
             try (FileInputStream fis = new FileInputStream(locatorWorkbook);
                  Workbook workbook = new XSSFWorkbook(fis)) {
 
@@ -57,13 +65,13 @@ public class LocatorMapper {
                     System.out.println("   ↳ Tab [" + sheetName + "]: Loaded " + sheetMappings + " locator mapping(s)");
                 }
 
-                System.out.println("✅ Centralized Object Repository Initialized. Total merged mappings: " + totalMappings);
+                System.out.println("✅ Centralized Object Repository Initialized from [" + locatorWorkbook.getName() + "]. Total merged mappings: " + totalMappings);
 
             } catch (Exception e) {
-                System.out.println("❌ Error reading centralized locator workbook " + locatorWorkbook.getName() + ": " + e.getMessage());
+                System.out.println("❌ Error reading locator workbook " + locatorWorkbook.getName() + ": " + e.getMessage());
             }
         } else {
-            System.out.println("⚠️ Warning: 'Global_Locators.xlsx' not found at project root directory.");
+            System.out.println("⚠️ Warning: No valid '*_Global_Locators.xlsx' file found at project root directory.");
         }
     }
 
